@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project-specific
+Space_Craft_ Ramachandra_quote 1.pdf
+SOFTWARE REQUIREMENT DOCUMENT.pdf
+sample.png
+check_pdf.py
+extract_text.py
+list_models.py
+extracted_data.csv
+interior_estimate.csv
+interior_data.json
