@@ -1,20 +1,64 @@
-Interior Drawing Analyzer
+# 🏢 Full-Scale Interior Project Analyzer
 
-This Streamlit app extracts text from PDF drawings and runs simple rule-based extraction.
+An intelligent Streamlit application that transforms complex **Architectural Drawings** (Blueprints) and **Interior Estimate Documents** into actionable, structured data using **Gemini Pro Vision**.
 
-Why you saw the DLL error
-- PyMuPDF (pymupdf) includes native DLLs. On some Windows setups a missing dependency causes "ImportError: DLL load failed while importing _extra".
+## 🚀 Features
 
-What I changed
-- The app now tries to import PyMuPDF, but if that fails it falls back to a pure-Python extraction using PyPDF2 so the app won't crash.
+- **Smart Mode Detection**: Automatically distinguishes between visual blueprints and structured estimate tables.
+- **Architectural Vision**: Extracts component names, dimensions, area, and circumference from visual drawings.
+- **Estimate Extraction**: Captures Room categories, Item names, Measurements, SFT, Rates, and total Amounts from tabular data.
+- **Interactive Dashboard**:
+    - **Financial Summary**: Total cost, Total area, and Average rate per SFT.
+    - **Visual Breakdown**: Dynamic charts showing cost distribution by room.
+    - **Itemized Tracking**: Searchable database of all project components.
+- **Multi-Engine Rendering**: Robust PDF-to-image conversion with fallbacks for maximum compatibility.
+- **Data Export**: Export results to **CSV** (for Excel) or **JSON**.
 
-Quick setup (Windows PowerShell):
+## 🛠️ Tech Stack
 
-```powershell
-python -m pip install -r requirements.txt
-# If you want PyMuPDF (optional), install the wheel that matches your Python version and architecture:
-# python -m pip install pymupdf
-streamlit run carpenter.py
-```
+- **Frontend**: [Streamlit](https://streamlit.io/)
+- **AI Engine**: [Google Gemini Pro (Vision & Text)](https://ai.google.dev/)
+- **PDF Processing**: PyMuPDF, pdf2image, PyPDF2
+- **Data Analysis**: Pandas
 
-If you still want PyMuPDF working, install a matching binary wheel for your Python version from PyPI or Christoph Gohlke's unofficial binaries.
+## 💻 Local Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone git@github.com:tkdrohit1/interior-design-markup.git
+   cd interior-design-markup
+   ```
+
+2. **Install Poppler (Required for Vision fallback)**:
+   - **Windows**: Download from [Poppler for Windows](https://github.com/oschwartz10612/poppler-windows/releases) and add the `bin` folder to your System PATH.
+   - **Linux**: `sudo apt-get install poppler-utils`
+
+3. **Install dependencies**:
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+
+4. **Configure API Key**:
+   Create a `.env` file in the root directory:
+   ```env
+   GOOGLE_API_KEY=your_gemini_api_key_here
+   ```
+
+5. **Run the application**:
+   ```bash
+   streamlit run carpenter.py
+   ```
+
+## ☁️ Deployment (Streamlit Community Cloud)
+
+1. **Push your code to GitHub** (Ensure `.env` is ignored!).
+2. Go to [share.streamlit.io](https://share.streamlit.io).
+3. Connect your GitHub repository.
+4. **Important**: Add your `GOOGLE_API_KEY` to the **App Secrets** in the Streamlit Cloud dashboard:
+   ```toml
+   GOOGLE_API_KEY = "your_actual_key_here"
+   ```
+5. Click **Deploy**!
+
+---
+Developed with 🏗️ for Interior Designers and Architects.
