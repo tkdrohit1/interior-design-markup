@@ -5,3 +5,8 @@ google-genai
 pymupdf
 Pillow
 python-dotenv
+pydantic
+openpyxl
+tenacity
+pypdfium2
+fpdf2
