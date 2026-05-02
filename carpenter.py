@@ -19,94 +19,66 @@ def generate_professional_pdf(df, project_name="Project Estimate"):
     
     # --- Header ---
     pdf.set_font("helvetica", "B", 16)
-    pdf.set_text_color(44, 62, 80) # Dark Blue
-    pdf.cell(0, 10, "SPACE CRAFT - Interior Design Estimate & Work Plan", ln=True, align="C")
+    pdf.set_text_color(0, 0, 0)
+    pdf.cell(0, 10, "KITCHEN MODULAR QUOTATION", ln=True, align="C")
     pdf.ln(5)
     
     # Project Info
     pdf.set_font("helvetica", "", 10)
-    pdf.set_text_color(0, 0, 0)
-    pdf.cell(0, 5, f"Project Name: {project_name}", ln=True, align="C")
-    pdf.cell(0, 5, f"Date: {datetime.date.today().strftime('%B %d, %Y')}", ln=True, align="C")
+    pdf.cell(0, 5, f"Project: {project_name}", ln=True, align="L")
+    pdf.cell(0, 5, f"Date: {datetime.date.today().strftime('%d/%m/%Y')}", ln=True, align="L")
     pdf.ln(10)
     
-    # Section 1: Overview
-    pdf.set_font("helvetica", "B", 12)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 10, "1. Project Overview", ln=True)
-    pdf.set_font("helvetica", "", 10)
-    pdf.set_text_color(0, 0, 0)
-    overview_text = "This document outlines the interior work breakdown for the project including woodwork, materials used, work scheduling, and payment terms."
-    pdf.multi_cell(0, 5, overview_text)
-    pdf.ln(5)
-    
-    # Section 2: Detailed Woodwork
-    pdf.set_font("helvetica", "B", 12)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 10, "2. Detailed Woodwork Estimate", ln=True)
-    
-    # Table Header
+    # Table Header (Jeeva Style)
+    # Location | Measurements (in Feet) | Total Sq.ft | Rate per Sq.ft | Total Amount
     pdf.set_font("helvetica", "B", 9)
-    pdf.set_fill_color(240, 240, 240)
-    cols = ["Item", "Measurement", "SFT", "Rate", "Amount"]
-    widths = [65, 35, 25, 25, 40]
+    cols = ["Location", "Measurements (in Feet)", "Total Sq.ft", "Rate per Sq.ft", "Total Amount"]
+    widths = [50, 45, 25, 30, 40]
     
+    # Draw Headers
     for i, col in enumerate(cols):
-        pdf.cell(widths[i], 8, col, border=1, fill=True, align="C")
+        pdf.cell(widths[i], 8, col, border=1, align="C")
     pdf.ln()
     
-    # Table Data Categorized by Room
-    pdf.set_font("helvetica", "", 9)
+    # Table Data
+    pdf.set_font("helvetica", "", 8)
     if not df.empty:
-        rooms = df["category"].unique()
-        for room in rooms:
-            # Room Row
-            pdf.set_font("helvetica", "B", 9)
-            pdf.set_fill_color(250, 250, 250)
-            pdf.cell(sum(widths), 7, f"  {room}", border=1, ln=True, fill=True)
+        for _, row in df.iterrows():
+            # Handle long item names by wrapping in 'Location' column
+            x, y = pdf.get_x(), pdf.get_y()
             
-            room_df = df[df["category"] == room]
-            pdf.set_font("helvetica", "", 8)
-            for _, row in room_df.iterrows():
-                # Item (with wrap handle)
-                x, y = pdf.get_x(), pdf.get_y()
-                pdf.multi_cell(widths[0], 6, str(row['item_name']), border=1)
-                new_y = pdf.get_y()
-                
-                # Move back to fill other columns
-                pdf.set_xy(x + widths[0], y)
-                pdf.cell(widths[1], new_y - y, str(row.get('measurement', '-')), border=1, align="C")
-                pdf.cell(widths[2], new_y - y, f"{row.get('sft', 0):.2f}", border=1, align="C")
-                pdf.cell(widths[3], new_y - y, f"{row.get('rate', 0):,.2f}", border=1, align="C")
-                pdf.cell(widths[4], new_y - y, f"Rs. {row.get('amount', 0):,.2f}", border=1, align="R")
-                pdf.ln()
+            # Combine category and item name for 'Location'
+            # Replace en-dash with standard hyphen for PDF compatibility
+            location_text = f"{row['category']}: {row['item_name']}".replace("–", "-").replace("—", "-")
+            pdf.multi_cell(widths[0], 6, location_text, border=1)
+            new_y = pdf.get_y()
+            h = new_y - y
+            
+            # Reset position for other columns in the same row
+            pdf.set_xy(x + widths[0], y)
+            pdf.cell(widths[1], h, str(row.get('measurement', '-')), border=1, align="C")
+            pdf.cell(widths[2], h, f"{row.get('sft', 0):.2f}", border=1, align="C")
+            pdf.cell(widths[3], h, f"Rs. {row.get('rate', 0):,.2f}", border=1, align="C")
+            pdf.cell(widths[4], h, f"Rs. {row.get('amount', 0):,.2f}", border=1, align="R")
+            pdf.ln()
     
-    # Total
+    # Grand Total
     total_val = df["amount"].sum() if not df.empty else 0
     pdf.set_font("helvetica", "B", 10)
     pdf.cell(sum(widths[:-1]), 10, "GRAND TOTAL  ", border=1, align="R")
     pdf.cell(widths[-1], 10, f"Rs. {total_val:,.2f}", border=1, align="R")
-    pdf.ln(15)
     
-    # Section 3: Timeline & Payment (Standard Template)
-    if pdf.get_y() > 220: pdf.add_page() # Check for space
-    
-    pdf.set_font("helvetica", "B", 12)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 10, "3. Work Execution Timeline", ln=True)
+    # Standard Material Specs (As typically expected in modular quotes)
+    pdf.ln(20)
+    pdf.set_font("helvetica", "B", 11)
+    pdf.cell(0, 10, "Material Specifications:", ln=True)
     pdf.set_font("helvetica", "", 9)
-    pdf.set_text_color(0, 0, 0)
-    pdf.multi_cell(0, 5, "- Execution duration: Approx 45 working days post-finalization.\n- Finishing stage: 7-9 working days after core framework completion.")
-    pdf.ln(5)
+    pdf.multi_cell(0, 5, "- Carcass: BWP Plywood (710 Grade)\n- Finish: 1.0mm Glossy/Matt Laminate or Acrylic\n- Hardware: Soft-close hinges and tandem boxes (Hettich/Hafele/Equivalent)\n- Edgebending: PVC 2mm machine pressed")
     
-    pdf.set_font("helvetica", "B", 12)
-    pdf.set_text_color(44, 62, 80)
-    pdf.cell(0, 10, "4. Payment Schedule", ln=True)
-    pdf.set_font("helvetica", "", 9)
-    pdf.set_text_color(0, 0, 0)
-    pdf.multi_cell(0, 5, "- 10% At the time of Booking\n- 10% On sharing first design draft\n- 10% Upon completion of final design\n- 20% Upon finalization of materials\n- 30% At start of production\n- 10% At commencement of installation\n- 5% Midway through site execution\n- 5% On final cleaning and handover")
-    
-    return pdf.output()
+    output = pdf.output()
+    if isinstance(output, bytearray):
+        return bytes(output)
+    return output
 
 # Try to import PyMuPDF (fitz).
 HAVE_PYMUPDF = False
@@ -252,7 +224,7 @@ def _call_gemini_with_retry(contents):
     )
 
 def analyze_page_ai(page_data):
-    """Uses Gemini to analyze the page image or text and extract details."""
+    """Uses Gemini to analyze the page image or text and extract details specialized for Kitchen Modular Drawings."""
     if not USE_AI or client is None:
         return {"mode": "unknown", "items": []}
 
@@ -260,42 +232,40 @@ def analyze_page_ai(page_data):
     text_content = page_data.get("content", "")
 
     prompt = """
-You are an expert interior design estimator and architectural analyzer.
-Analyze the provided content (image or text). Determine if it is a structured estimate table or an architectural drawing.
+You are a Senior Kitchen Modular Estimator. 
+Analyze the provided drawing. Your goal is to provide a CONSOLIDATED RUNNING LENGTH estimate, exactly how a contractor bills.
 
-### MODE 1: STRUCTURED ESTIMATE TABLE
-If the page contains an estimate table (e.g., Living Room, Kitchen, Wardrobe categories with SFT, Rate, Amount), extract EVERY row.
-JSON structure:
+### CALCULATION RULES (CRITICAL):
+1. **NO DOUBLE COUNTING**: Do not add individual cabinets if you can see the total run length. 
+2. **Consolidate by Category**: Group all base cabinets on one wall into a single "Kitchen - Base Unit" entry.
+3. **Dimensions**: Convert MM to Feet (MM / 304.8).
+4. **SFT Calculation**: SFT = Length(ft) x Height(ft).
+5. **Categories to Use**:
+   - "Kitchen – Base Unit (BWP)" (Standard height approx 2.9ft)
+   - "Kitchen – Middle Unit" (Wall units, standard height approx 2.4ft)
+   - "Kitchen – Loft" (Top units, standard height approx 1.9ft)
+   - "Kitchen – Rolling Box (BWP)" (Full height units)
+
+### JEEVA STYLE SCHEMA:
 {
   "mode": "estimate",
   "items": [
     {
-      "category": "Living Room",
-      "item_name": "Acrolic TV Panaling + PU",
-      "measurement": "5.2x7.4",
-      "sft": 38.48,
-      "rate": 1850.00,
-      "amount": 71188.00
+      "category": "Kitchen – Base Unit (BWP)",
+      "item_name": "Main Counter Run (Consolidated)",
+      "measurement": "16.2 x 2.9",
+      "sft": 47.0,
+      "rate": 1800.00,
+      "amount": 84600.00
     }
   ]
 }
 
-### MODE 2: ARCHITECTURAL DRAWING
-If the page is a drawing/blueprint, identify visual components.
-JSON structure:
-{
-  "mode": "drawing",
-  "items": [
-    {
-      "name": "Wall Cabinet",
-      "dimension": "600 x 720 mm",
-      "area": "0.43 sqm",
-      "circumference": "2.64 m"
-    }
-  ]
-}
+### LOGIC:
+- If you see an L-shape, subtract the corner overlap (usually 2ft) so the SFT is accurate.
+- If rates are not visible, use: Base ₹1800, Middle ₹1600, Loft ₹1100, Rolling Box ₹1800.
 
-Return the result as a STRICT JSON object. Ensure numerical values (sft, rate, amount) are numbers, not strings with currency symbols.
+Return STRICT JSON.
 """
 
     try:
@@ -328,97 +298,195 @@ Return the result as a STRICT JSON object. Ensure numerical values (sft, rate, a
 
 
 def main():
-    st.set_page_config(page_title="Interior Project Analyzer", layout="wide", page_icon="🏗️")
+    st.set_page_config(
+        page_title="Interior Project Analyzer | AI Studio", 
+        layout="wide", 
+        page_icon="🏗️",
+        initial_sidebar_state="expanded"
+    )
     
-    # Custom CSS for a more "Interior Design" feel
+    # --- MODERN ARCHITECTURAL CSS ---
     st.markdown("""
         <style>
-        .main { background-color: #f8f9fa; }
-        .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .stTable { background-color: #ffffff; border-radius: 10px; }
+        /* Base Styles */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .main {
+            background-color: #fcfcfd;
+        }
+        
+        /* Card-based UI */
+        div[data-testid="stExpander"] {
+            background-color: white;
+            border: 1px solid #eef0f2;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        /* Metric Styling */
+        div[data-testid="stMetric"] {
+            background-color: white;
+            border: 1px solid #eef0f2;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        /* Modern Buttons */
+        .stButton>button {
+            width: 100%;
+            border-radius: 8px;
+            height: 3em;
+            background-color: #1a1a1a;
+            color: white;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #404040;
+            border: none;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Header Styling */
+        .main-header {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+        .sub-header {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        /* Floating Sidebar */
+        section[data-testid="stSidebar"] {
+            background-color: #ffffff;
+            border-right: 1px solid #eef0f2;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    st.title("🏢 Full-Scale Interior Project Analyzer")
-    st.markdown("Transforming Architectural Drawings and Estimate Documents into Actionable Data.")
+    # --- TOP HEADER ---
+    st.markdown('<h1 class="main-header">🏗️ AI Studio</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Premium Interior Quotation Engine & Blueprint Analyzer</p>', unsafe_allow_html=True)
 
-    st.sidebar.markdown("## ⚙️ Settings")
-    st.session_state.debug_mode = st.sidebar.checkbox("🐞 Debug Mode", value=False)
-    rendering_status = "✅ Vision Mode (Ready)" if (HAVE_PYMUPDF or HAVE_PDFIUM or HAVE_PDF2IMAGE) else "⚠️ Text-Only Mode"
+    # --- SIDEBAR CONFIGURATION ---
+    with st.sidebar:
+        st.image("https://cdn-icons-png.flaticon.com/512/1033/1033001.png", width=80)
+        st.title("Studio Settings")
+        
+        with st.expander("💰 Price List (₹/SFT)", expanded=True):
+            rate_base = st.number_input("Base Unit", value=1850, step=50)
+            rate_wall = st.number_input("Wall Unit", value=1550, step=50)
+            rate_tall = st.number_input("Tall Unit", value=2200, step=50)
+            rate_loft = st.number_input("Loft Unit", value=1250, step=50)
 
-    st.sidebar.write("System Engine:", rendering_status)
-    st.sidebar.write("Gemini Status:", "✅ Active" if USE_AI else "❌ Offline")
-    
-    if not USE_AI:
-        st.sidebar.warning("Missing GOOGLE_API_KEY in .env")
+        st.session_state.current_rates = {
+            "Base": rate_base,
+            "Wall": rate_wall,
+            "Tall": rate_tall,
+            "Loft": rate_loft
+        }
+        
+        st.divider()
+        st.session_state.debug_mode = st.checkbox("🐞 Debug Mode", value=False)
+        
+        st.caption("v2.0 | Architectural Edition")
 
-    uploaded_file = st.file_uploader("Upload PDF (Drawing or Estimate)", type=["pdf"])
+    # --- UPLOAD SECTION ---
+    uploaded_file = st.file_uploader("", type=["pdf"])
 
     if not uploaded_file:
-        st.info("👋 Welcome! Upload an interior design PDF to begin analysis.")
+        st.info("✨ **Studio Ready.** Upload a drawing PDF to begin your specialized modular quotation.")
         return
 
-    # Auto-clear results if a new file is uploaded
+    # Dynamic Project Naming
+    raw_name = uploaded_file.name.replace(".pdf", "")
+    project_name = re.sub(r'[\(\)\[\]]', '', raw_name).strip()
+
     if "current_file_name" not in st.session_state or st.session_state.current_file_name != uploaded_file.name:
         st.session_state.full_results = []
         st.session_state.current_file_name = uploaded_file.name
-        # Clear individual page results
         for key in list(st.session_state.keys()):
-            if key.startswith("res_"):
-                del st.session_state[key]
+            if key.startswith("res_"): del st.session_state[key]
 
-    with st.spinner("📑 Loading PDF document..."):
+    with st.spinner("🖋️ Scanning blueprint..."):
         uploaded_file.seek(0)
         pages = extract_pages(uploaded_file)
     
-    st.success(f"Loaded {len(pages)} pages.")
-
-    if "full_results" not in st.session_state:
-        st.session_state.full_results = []
-
-    # Display and Analyze Pages
+    # --- PAGE ANALYSIS TABS ---
+    st.markdown(f"### 📑 Project: {project_name}")
+    
+    # Display Pages in a polished grid
     for i, page in enumerate(pages):
-        with st.expander(f"📄 Page {page['page']} Analysis", expanded=(i==0)):
-            col1, col2 = st.columns([1, 1.2])
+        with st.expander(f"PAGE {page['page']} - Drawing Visualization", expanded=(i==0)):
+            col1, col2 = st.columns([1, 1])
             
             with col1:
+                st.markdown("#### 🖼️ Blueprint View")
                 if page["image_b64"]:
                     img_bytes = base64.b64decode(page["image_b64"])
-                    st.image(img_bytes, caption=f"Page {page['page']} Visual", width="stretch")
+                    st.image(img_bytes, use_container_width=True)
                 else:
-                    st.info("Text-only content detected.")
-                    st.text_area("Source Text", page["content"], height=200, key=f"text_{i}")
+                    st.warning("Visual data not available for this page.")
             
             with col2:
-                btn_key = f"analyze_{i}"
-                if st.button(f"🔍 Analyze Page {page['page']}", key=btn_key):
-                    with st.spinner("🤖 AI is processing..."):
-                        result = analyze_page_ai(page)
-                        if result and result.get("mode") != "error":
-                            st.session_state[f"res_{i}"] = result
-                            # Append to aggregate if not already there
-                            if result not in st.session_state.full_results:
-                                st.session_state.full_results.append(result)
-                            st.rerun()
-                        else:
-                            st.error("AI Analysis failed to return valid data. Please try again.")
-                
-                if f"res_{i}" in st.session_state:
+                st.markdown("#### 🤖 AI Analysis")
+                if f"res_{i}" not in st.session_state:
+                    if st.button(f"Analyze Drawing {page['page']}", key=f"btn_{i}"):
+                        with st.spinner("Calculating modules..."):
+                            result = analyze_page_ai(page)
+                            if result and result.get("mode") != "error":
+                                st.session_state[f"res_{i}"] = result
+                                if result not in st.session_state.full_results:
+                                    st.session_state.full_results.append(result)
+                                st.rerun()
+                else:
                     res = st.session_state[f"res_{i}"]
-                    if isinstance(res, dict):
-                        mode = res.get("mode", "unknown")
-                        items = res.get("items", [])
-                        if mode == "estimate":
-                            st.markdown("### 📊 Extracted Estimate Data")
-                            df = pd.DataFrame(items)
-                            st.dataframe(df, width="stretch")
-                        elif mode == "drawing":
-                            st.markdown("### 📐 Drawing Components")
-                            st.table(items)
-                        else:
-                            st.warning("Could not categorize this page automatically.")
-                    else:
-                        st.error("AI returned data in an invalid format.")
+                    items = res.get("items", [])
+                    st.dataframe(pd.DataFrame(items), use_container_width=True)
+                    if st.button("🗑️ Reset Page Data", key=f"reset_{i}"):
+                        del st.session_state[f"res_{i}"]
+                        st.rerun()
+
+    # --- FINAL DASHBOARD ---
+    if st.session_state.full_results:
+        st.divider()
+        st.markdown("### 📊 Quotation Dashboard")
+        
+        all_items = []
+        for r in st.session_state.full_results:
+            if r.get("mode") == "estimate": all_items.extend(r.get("items", []))
+        
+        if all_items:
+            full_df = pd.DataFrame(all_items)
+            
+            # Key Metrics Cards
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Project Total", f"₹{full_df['amount'].sum():,.2f}")
+            c2.metric("Total Area", f"{full_df['sft'].sum():,.2f} SFT")
+            c3.metric("Item Count", len(full_df))
+            
+            # Export Actions
+            st.markdown("#### 📤 Export & Delivery")
+            ex1, ex2, ex3 = st.columns(3)
+            
+            pdf_bytes = generate_professional_pdf(full_df, project_name=project_name)
+            ex1.download_button("📜 Download JEEVA Style PDF", pdf_bytes, f"Quote_{project_name}.pdf", "application/pdf")
+            
+            csv = full_df.to_csv(index=False).encode('utf-8')
+            ex2.download_button("📥 Download Excel/CSV", csv, f"Data_{project_name}.csv", "text/csv")
+            
+            st.success("✅ Quotation generated and ready for delivery.")
 
     # Aggregate Analysis & Summary Dashboard
     if st.session_state.full_results:
